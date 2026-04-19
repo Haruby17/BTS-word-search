@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>BTS Universe Word Search 💜</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; overflow-x:hidden; }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #07001a;
+  color: #fff;
+  min-height: 100vh;
+}
+
+/* Animated starfield bg */
+.bg {
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse at 15% 40%, #1f0055 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 15%, #0a0035 0%, transparent 55%),
+    radial-gradient(ellipse at 60% 80%, #180040 0%, transparent 45%),
+    #07001a;
+}
+.star {
+  position: absolute; border-radius: 50%; background: #fff;
+  animation: tw 4s ease-in-out infinite;
+}
+@keyframes tw { 0%,100%{opacity:.15} 50%{opacity:1} }
+
+.wrap { position:relative; z-index:1; max-width:480px; margin:0 auto; padding:12px 10px 40px; }
+
+/* ——— SCREENS ——— */
+.screen { display:none; }
+.screen.active { display:block; }
+
+/* ——— HOME SCREEN ——— */
+.home-center { text-align:center; padding:40px 0 20px; }
+.logo-top { font-size:10px; letter-spacing:5px; color:#7744cc; text-transform:uppercase; margin-bottom:10px; }
+.big-logo { font-size:52px; margin-bottom:4px; }
+.game-title {
+  font-size:34px; font-weight:900; letter-spacing:-1px;
+  background:linear-gradient(135deg,#aa77ff,#ff66cc,#66aaff);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  margin-bottom:4px;
+}
+.game-sub { font-size:12px; letter-spacing:3px; color:#6644aa; margin-bottom:30px; }
+
+.stats-row {
+  display:flex; justify-content:center; gap:0; margin:0 auto 28px;
+  background:rgba(153,102,255,0.08); border:1px solid rgba(153,102,255,0.18);
+  border-radius:16px; overflow:hidden; max-width:320px;
+}
+.stat-box { flex:1; padding:12px 8px; text-align:center; border-right:1px solid rgba(153,102,255,0.15); }
+.stat-box:last-child { border-right:none; }
+.stat-num { font-size:20px; font-weight:800; color:#cc99ff; }
+.stat-lbl { font-size:10px; color:#665577; margin-top:2px; letter-spacing:1px; }
+
+.menu-btn {
+  display:block; width:100%; max-width:280px; margin:0 auto 12px;
+  padding:14px; border-radius:16px; border:none; font-size:15px; font-weight:700;
+  cursor:pointer; transition:transform 0.15s, box-shadow 0.15s; letter-spacing:0.5px;
+}
+.menu-btn:active { transform:scale(0.97); }
+.btn-primary {
+  background:linear-gradient(135deg,#9933ff,#cc44aa);
+  color:#fff; box-shadow:0 4px 24px rgba(153,51,255,0.4);
+}
+.btn-primary:hover { box-shadow:0 6px 30px rgba(153,51,255,0.6); }
+.btn-secondary {
+  background:rgba(153,102,255,0.1); border:1px solid rgba(153,102,255,0.25);
+  color:#cc99ff;
+}
+.btn-gold {
+  background:linear-gradient(135deg,#cc8800,#ffcc00);
+  color:#1a0800; box-shadow:0 4px 20px rgba(255,180,0,0.3);
+}
+
+/* ——— LEVEL SELECT ——— */
+.screen-header {
+  display:flex; align-items:center; gap:12px; margin-bottom:16px; padding:4px 0;
+}
+.back-btn {
+  background:rgba(153,102,255,0.12); border:1px solid rgba(153,102,255,0.25);
+  border-radius:10px; padding:7px 14px; color:#aa88ff; font-size:13px; cursor:pointer;
+  font-weight:600;
+}
+.screen-title { font-size:18px; font-weight:800; color:#fff; }
+
+.levels-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.level-card {
+  background:rgba(153,102,255,0.08); border:1px solid rgba(153,102,255,0.2);
+  border-radius:14px; padding:12px 6px; text-align:center; cursor:pointer;
+  transition:all 0.2s; position:relative;
+}
+.level-card:hover, .level-card:active { background:rgba(153,102,255,0.18); transform:scale(1.03); }
+.level-card.completed { border-color:rgba(102,255,178,0.35); background:rgba(102,255,178,0.06); }
+.level-card.locked { opacity:0.4; cursor:default; }
+.lcard-emoji { font-size:26px; margin-bottom:4px; }
+.lcard-num { font-size:10px; color:#7755aa; margin-bottom:2px; letter-spacing:1px; }
+.lcard-name { font-size:10px; color:#ccaaff; line-height:1.3; font-weight:600; }
+.lcard-done { position:absolute; top:6px; right:6px; font-size:12px; }
+.lcard-coins { font-size:10px; color:#ffcc00; margin-top:4px; }
+
+/* ——— SHOP SCREEN ——— */
+.coins-bar {
+  background:rgba(255,204,0,0.08); border:1px solid rgba(255,204,0,0.2);
+  border-radius:12px; padding:10px 16px; margin-bottom:14px;
+  display:flex; align-items:center; gap:8px;
+}
+.coins-bar span { font-size:20px; font-weight:800; color:#ffcc00; }
+.coins-bar small { font-size:12px; color:#886600; }
+
+.shop-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+.shop-card {
+  background:rgba(255,204,0,0.05); border:1px solid rgba(255,204,0,0.15);
+  border-radius:14px; padding:14px; cursor:pointer; transition:all 0.2s; position:relative;
+}
+.shop-card:hover { background:rgba(255,204,0,0.1); transform:translateY(-2px); }
+.shop-card.owned { border-color:rgba(102,255,178,0.4); background:rgba(102,255,178,0.05); }
+.shop-card.equipped { border-color:#ffcc00; box-shadow:0 0 14px rgba(255,204,0,0.25); }
+.shop-icon { font-size:30px; margin-bottom:6px; }
+.shop-member { font-size:9px; color:#ffaa00; letter-spacing:2px; margin-bottom:2px; }
+.shop-name { font-size:13px; font-weight:700; color:#fff; margin-bottom:4px; }
+.shop-effect { font-size:11px; color:#aa8800; margin-bottom:8px; line-height:1.4; }
+.shop-price { font-size:13px; font-weight:700; color:#ffcc00; }
+.shop-owned { font-size:11px; color:#66cc88; font-weight:600; }
+.shop-equip-badge {
+  position:absolute; top:-5px; right:-5px;
+  background:#ffcc00; color:#000; font-size:9px; font-weight:800;
+  padding:2px 7px; border-radius:10px;
+}
+
+/* ——— GAME SCREEN ——— */
+.game-topbar {
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:10px; gap:6px;
+}
+.game-topbar .back-btn { flex-shrink:0; }
+.topbar-mid { text-align:center; flex:1; }
+.topbar-level { font-size:10px; color:#7744cc; letter-spacing:2px; }
+.topbar-theme { font-size:13px; font-weight:700; color:#ff99cc; }
+.topbar-right { display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
+.topbar-coins { font-size:13px; font-weight:700; color:#ffcc00; }
+.topbar-timer { font-size:11px; color:#7755aa; }
+
+.grid-outer {
+  background:rgba(10,0,30,0.9); border-radius:16px;
+  border:1px solid rgba(153,102,255,0.22); padding:10px;
+  margin-bottom:10px; overflow:hidden;
+}
+#wordGrid {
+  display:grid; gap:2px; user-select:none;
+  width:100%; touch-action:none;
+}
+.cell {
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:700; border-radius:5px;
+  background:rgba(153,102,255,0.06); border:1px solid rgba(153,102,255,0.1);
+  color:#bbaadd; cursor:pointer; text-transform:uppercase;
+  transition:background 0.1s, border-color 0.1s;
+  aspect-ratio:1;
+}
+.cell.sel { background:rgba(255,102,204,0.28) !important; border-color:rgba(255,102,204,0.5) !important; color:#ffbbee !important; }
+.cell.found { border-color:transparent !important; color:#fff !important; }
+.fc0{background:rgba(153,102,255,0.45)!important}
+.fc1{background:rgba(255,102,204,0.42)!important}
+.fc2{background:rgba(102,153,255,0.42)!important}
+.fc3{background:rgba(255,204,0,0.38)!important}
+.fc4{background:rgba(80,220,150,0.35)!important}
+.fc5{background:rgba(255,140,80,0.38)!important}
+.fc6{background:rgba(200,80,255,0.42)!important}
+.fc7{background:rgba(255,255,100,0.3)!important}
+
+/* Word list panel */
+.words-panel {
+  background:rgba(10,0,30,0.85); border-radius:14px;
+  border:1px solid rgba(153,102,255,0.2); padding:10px 12px;
+  margin-bottom:10px;
+}
+.words-panel-title { font-size:9px; letter-spacing:3px; color:#7733cc; margin-bottom:8px; font-weight:700; }
+.word-chips { display:flex; flex-wrap:wrap; gap:5px; }
+.word-chip {
+  background:rgba(153,102,255,0.1); border:1px solid rgba(153,102,255,0.2);
+  border-radius:20px; padding:4px 10px; font-size:11px; color:#ccaaff;
+  font-weight:600; transition:all 0.2s;
+}
+.word-chip.found {
+  background:rgba(153,102,255,0.06); border-color:rgba(153,102,255,0.1);
+  text-decoration:line-through; color:#44335566;
+}
+.word-chip .reward { color:#ffcc00; font-size:10px; margin-left:4px; }
+.word-chip.found .reward { color:#33224433; }
+
+/* Active collectible bar */
+.active-coll-bar {
+  background:rgba(255,204,0,0.07); border:1px solid rgba(255,204,0,0.18);
+  border-radius:12px; padding:8px 12px; margin-bottom:10px;
+  display:flex; align-items:center; gap:10px; font-size:12px; color:#aa8800;
+}
+.active-coll-bar strong { color:#ffcc00; }
+.coll-use-btn {
+  margin-left:auto; background:rgba(255,204,0,0.15); border:1px solid rgba(255,204,0,0.3);
+  border-radius:8px; padding:4px 10px; font-size:11px; color:#ffcc00; cursor:pointer; font-weight:700;
+}
+
+/* ——— NOTIFICATIONS ——— */
+.notif {
+  position:fixed; top:16px; left:50%; transform:translateX(-50%) translateY(-100px);
+  background:rgba(120,60,220,0.97); backdrop-filter:blur(10px);
+  border-radius:24px; padding:10px 22px; font-size:13px; font-weight:700;
+  z-index:9999; transition:transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+  white-space:nowrap; border:1px solid rgba(255,255,255,0.15); max-width:90vw;
+  text-align:center;
+}
+.notif.show { transform:translateX(-50%) translateY(0); }
+.notif.gold { background:rgba(200,150,0,0.97); color:#fff; }
+.notif.green { background:rgba(40,180,100,0.97); color:#fff; }
+
+/* ——— COMPLETE MODAL ——— */
+.modal-bg {
+  position:fixed; inset:0; background:rgba(0,0,0,0.88);
+  display:flex; align-items:center; justify-content:center;
+  z-index:500; opacity:0; pointer-events:none; transition:opacity 0.3s;
+}
+.modal-bg.show { opacity:1; pointer-events:all; }
+.modal-card {
+  background:linear-gradient(160deg,#150035,#0c0028);
+  border:1.5px solid rgba(153,102,255,0.45); border-radius:24px;
+  padding:30px 24px; text-align:center; max-width:310px; width:90%;
+  animation:popIn 0.4s cubic-bezier(0.175,0.885,0.32,1.275) both;
+}
+@keyframes popIn { from{transform:scale(0.6);opacity:0} to{transform:scale(1);opacity:1} }
+.modal-emoji { font-size:54px; margin-bottom:10px; display:block; }
+.modal-title {
+  font-size:26px; font-weight:900; margin-bottom:8px;
+  background:linear-gradient(135deg,#aa77ff,#ff66cc); -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent; background-clip:text;
+}
+.modal-body { font-size:13px; color:#aa88cc; margin-bottom:22px; line-height:1.7; }
+.modal-body strong { color:#ffcc00; }
+.modal-btns { display:flex; flex-direction:column; gap:8px; }
+.modal-btn {
+  border:none; border-radius:14px; padding:13px; font-size:14px; font-weight:700;
+  cursor:pointer; transition:transform 0.15s;
+}
+.modal-btn:active { transform:scale(0.97); }
+.modal-btn.primary { background:linear-gradient(135deg,#9933ff,#cc44aa); color:#fff; }
+.modal-btn.sec { background:rgba(153,102,255,0.12); border:1px solid rgba(153,102,255,0.25); color:#cc99ff; }
+
+/* ——— SPARKLES ——— */
+.sparkle { position:fixed; pointer-events:none; z-index:800; font-size:18px; animation:sfx 0.9s ease-out forwards; }
+@keyframes sfx { 0%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:0;transform:translateY(-90px) scale(0.3)} }
+
+/* ——— PROGRESS BAR ——— */
+.progress-bar-wrap { height:4px; background:rgba(153,102,255,0.12); border-radius:2px; margin-bottom:10px; overflow:hidden; }
+.progress-bar { height:100%; border-radius:2px; background:linear-gradient(90deg,#9933ff,#ff66cc); transition:width 0.4s; }
+</style>
+</head>
+<body>
+
+<div class="bg" id="bgStars"></div>
+<div class="notif" id="notif"></div>
+
+<!-- COMPLETE MODAL -->
+<div class="modal-bg" id="modal">
+  <div class="modal-card">
+    <span class="modal-emoji" id="modalEmoji">✨</span>
+    <div class="modal-title" id="modalTitle">Level Complete!</div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-btns">
+      <button class="modal-btn primary" id="modalNext">Next Level →</button>
+      <button class="modal-btn sec" onclick="closeModal()">Stay Here</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ HOME SCREEN ============ -->
+<div class="screen active" id="screenHome">
+  <div class="wrap">
+    <div class="home-center">
+      <div class="logo-top">⭐ ARMY Edition ⭐</div>
+      <div class="big-logo">💜</div>
+      <div class="game-title">BTS Universe</div>
+      <div class="game-sub">WORD SEARCH</div>
+
+      <div class="stats-row">
+        <div class="stat-box"><div class="stat-num" id="hCoins">0</div><div class="stat-lbl">🪙 COINS</div></div>
+        <div class="stat-box"><div class="stat-num" id="hLevels">0</div><div class="stat-lbl">✅ DONE</div></div>
+        <div class="stat-box"><div class="stat-num" id="hScore">0</div><div class="stat-lbl">⭐ SCORE</div></div>
+        <div class="stat-box"><div class="stat-num" id="hColls">0</div><div class="stat-lbl">💎 COLLS</div></div>
+      </div>
+
+      <button class="menu-btn btn-primary" onclick="goTo('screenLevels')">▶ Play</button>
+      <button class="menu-btn btn-gold" onclick="goTo('screenShop')">🛍️ BTS Collectibles Shop</button>
+      <button class="menu-btn btn-secondary" onclick="goTo('screenAbout')">💜 About This Game</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ LEVEL SELECT ============ -->
+<div class="screen" id="screenLevels">
+  <div class="wrap">
+    <div class="screen-header">
+      <button class="back-btn" onclick="goTo('screenHome')">← Back</button>
+      <div class="screen-title">Choose Level</div>
+    </div>
+    <div class="levels-grid" id="levelsGrid"></div>
+  </div>
+</div>
+
+<!-- ============ SHOP ============ -->
+<div class="screen" id="screenShop">
+  <div class="wrap">
+    <div class="screen-header">
+      <button class="back-btn" onclick="goTo('screenHome')">← Back</button>
+      <div class="screen-title">BTS Shop 🛍️</div>
+    </div>
+    <div class="coins-bar">
+      <span id="shopCoins">0</span>
+      <small>🪙 coins available</small>
+    </div>
+    <div class="shop-grid" id="shopGrid"></div>
+  </div>
+</div>
+
+<!-- ============ GAME ============ -->
+<div class="screen" id="screenGame">
+  <div class="wrap">
+    <div class="game-topbar">
+      <button class="back-btn" onclick="goTo('screenLevels')">← Levels</button>
+      <div class="topbar-mid">
+        <div class="topbar-level" id="gtLevel">LEVEL 1</div>
+        <div class="topbar-theme" id="gtTheme">BTS Members</div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-coins">🪙 <span id="gtCoins">0</span></div>
+        <div class="topbar-timer" id="gtTimer">0:00</div>
+      </div>
+    </div>
+
+    <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+
+    <div id="activeColl" class="active-coll-bar" style="display:none">
+      <span id="activeCollText">No collectible</span>
+      <button class="coll-use-btn" id="activeCollBtn" onclick="useCollectible()">Use ⚡</button>
+    </div>
+
+    <div class="grid-outer">
+      <div id="wordGrid"></div>
+    </div>
+
+    <div class="words-panel">
+      <div class="words-panel-title">FIND THESE WORDS</div>
+      <div class="word-chips" id="wordChips"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ABOUT ============ -->
+<div class="screen" id="screenAbout">
+  <div class="wrap">
+    <div class="screen-header">
+      <button class="back-btn" onclick="goTo('screenHome')">← Back</button>
+      <div class="screen-title">About 💜</div>
+    </div>
+    <div style="background:rgba(153,102,255,0.07);border:1px solid rgba(153,102,255,0.18);border-radius:16px;padding:20px;line-height:1.9;font-size:13px;color:#ccaadd;">
+      <p style="font-size:22px;text-align:center;margin-bottom:12px;">💜 BTS Universe Word Search 💜</p>
+      <p>Made with love for an ARMY 🌸</p><br>
+      <p><strong style="color:#aa88ff;">How to play:</strong><br>Tap and drag across letters to select words. Find all words to complete the level!</p><br>
+      <p><strong style="color:#ffcc00;">Coins & Shop:</strong><br>Every word earns coins 🪙 Spend them in the BTS Collectibles Shop for special powers!</p><br>
+      <p><strong style="color:#ff99cc;">Collectibles:</strong><br>Each BTS member has a unique collectible with special in-game powers. Collect them all!</p><br>
+      <p><strong style="color:#aa88ff;">15 Levels:</strong><br>Members · Songs · Albums · ARMY · Colors · Korean · Movies · Dance · Emotions · Weverse · Concert · Fashion · Food · Run BTS · Universe Lore</p><br>
+      <p style="text-align:center;margin-top:8px;font-size:20px;">Purple you 💜</p>
+    </div>
+    <div style="margin-top:14px;">
+      <button class="menu-btn btn-secondary" onclick="resetGame()" style="max-width:100%;background:rgba(255,50,50,0.08);border-color:rgba(255,50,50,0.2);color:#ff8888;">🔄 Reset All Progress</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════
+// DATA
+// ══════════════════════════════
+const LEVELS = [
+  { name:"BTS Members",    theme:"💜 Classic",      emoji:"👑", words:["RM","JIN","SUGA","JHOPE","JIMIN","TAEHYUNG","JUNGKOOK"], bonus:50 },
+  { name:"Hit Songs",      theme:"🎵 Music",         emoji:"🎤", words:["DYNAMITE","BUTTER","IDOL","DNA","DOPE","FIRE","SPRING"], bonus:60 },
+  { name:"BTS Albums",     theme:"💿 Discography",   emoji:"💿", words:["WINGS","PROOF","FACE","MAP","SKOOL","YOUNG","DARK"], bonus:70 },
+  { name:"ARMY World",     theme:"🌸 ARMY",          emoji:"🌸", words:["PURPLE","BORAHAE","ARMY","BANGTAN","BEYOND","PURPLE","BOMBS"], bonus:65 },
+  { name:"Pretty Colors",  theme:"🎨 Colors",        emoji:"🎨", words:["PURPLE","GOLDEN","BLACK","WHITE","SILVER","PINK","INDIGO"], bonus:55 },
+  { name:"Korean Words",   theme:"🇰🇷 Korean",       emoji:"🇰🇷", words:["ANNYEONG","SARANGHAE","GOMAWO","DAEBAK","AIGOO","JINJJA","OTTOKE"], bonus:85 },
+  { name:"BTS Moments",    theme:"🎬 Cinema",        emoji:"🎬", words:["PROMISE","HIGHWAY","LIFE","SHADOW","MAGIC","INNER","BREAK"], bonus:75 },
+  { name:"Dance Moves",    theme:"💃 Dance",         emoji:"💃", words:["SWIPE","POINT","SPIN","LOCK","WAVE","SLIDE","JUMP"], bonus:70 },
+  { name:"Good Feelings",  theme:"💝 Feels",         emoji:"💝", words:["JOY","HOPE","LOVE","PEACE","BRAVE","SHINE","DREAM"], bonus:65 },
+  { name:"Weverse Life",   theme:"📱 Weverse",       emoji:"📱", words:["POST","LIVE","VIDEO","PHOTO","REPLY","HEART","SHARE"], bonus:60 },
+  { name:"On Stage",       theme:"🎪 Concert",       emoji:"🎪", words:["STAGE","LIGHTS","CROWD","ENCORE","CHANT","BANNER","GLOW"], bonus:85 },
+  { name:"BTS Fashion",    theme:"👗 Fashion",       emoji:"👗", words:["SUIT","DENIM","KNIT","BOOTS","CHAIN","RINGS","BERET"], bonus:70 },
+  { name:"Food They Love", theme:"🍜 Foodie",        emoji:"🍜", words:["RAMYEON","SUSHI","TACOS","PIZZA","KIMCHI","TTEOK","COLA"], bonus:75 },
+  { name:"Run BTS",        theme:"🏃 Run BTS",       emoji:"🏃", words:["RACE","QUEST","GAME","PRANK","LAUGH","CHEER","THROW"], bonus:80 },
+  { name:"Universe Lore",  theme:"🌌 Lore",          emoji:"🌌", words:["HYYH","OMELAS","TEAR","MAGIC","WONDER","YOUTH","ETERNITY"], bonus:95 },
+];
+
+const COLLECTIBLES = [
+  { id:"rm_mic",      member:"RM",     icon:"🎤", name:"RM Mic",       cost:80,  effectName:"Letter Hint",   effect:"Reveals a random hidden letter on the grid" },
+  { id:"jin_rose",    member:"JIN",    icon:"🌹", name:"Jin Rose",      cost:80,  effectName:"Time Freeze",   effect:"Pauses your timer for 20 seconds" },
+  { id:"suga_piano",  member:"SUGA",   icon:"🎹", name:"Suga Piano",    cost:90,  effectName:"Word Glow",     effect:"Highlights all cells of one unfound word" },
+  { id:"jhope_sun",   member:"J-HOPE", icon:"☀️", name:"J-Hope Sun",    cost:85,  effectName:"+Bonus Coins",  effect:"Earn +15 extra coins on every word found" },
+  { id:"jimin_feather",member:"JIMIN", icon:"🪶", name:"Jimin Feather", cost:85,  effectName:"Double Time",   effect:"Your timer runs at half speed" },
+  { id:"v_camera",    member:"V",      icon:"📸", name:"V Camera",      cost:90,  effectName:"Auto-Find",     effect:"Automatically finds and marks one word" },
+  { id:"jk_bunny",    member:"JK",     icon:"🐰", name:"JK Bunny",      cost:80,  effectName:"Score Boost",   effect:"Score +50% more points per word" },
+  { id:"army_bomb",   member:"ALL",    icon:"💜", name:"Army Bomb",     cost:120, effectName:"Rainbow Grid",  effect:"Gives the grid a colorful glow effect" },
+  { id:"bts_van",     member:"ALL",    icon:"🚐", name:"BTS Van",       cost:150, effectName:"Skip Level",    effect:"Instantly complete the current level" },
+];
+
+// ══════════════════════════════
+// STATE
+// ══════════════════════════════
+let S = {
+  coins: 0, score: 0,
+  completedLevels: [],
+  ownedCollectibles: [],
+  equippedCollectible: null,
+};
+
+function loadState() {
+  try {
+    const d = localStorage.getItem('bts_ws2');
+    if (d) S = { ...S, ...JSON.parse(d) };
+  } catch(e) {}
+}
+function saveState() {
+  try { localStorage.setItem('bts_ws2', JSON.stringify(S)); } catch(e) {}
+}
+
+// ══════════════════════════════
+// NAVIGATION
+// ══════════════════════════════
+function goTo(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screenId).classList.add('active');
+  window.scrollTo(0, 0);
+  if (screenId === 'screenHome') refreshHome();
+  if (screenId === 'screenLevels') renderLevels();
+  if (screenId === 'screenShop') renderShop();
+}
+
+// ══════════════════════════════
+// HOME
+// ══════════════════════════════
+function refreshHome() {
+  document.getElementById('hCoins').textContent = S.coins;
+  document.getElementById('hLevels').textContent = S.completedLevels.length;
+  document.getElementById('hScore').textContent = S.score > 999 ? Math.floor(S.score/1000)+'k' : S.score;
+  document.getElementById('hColls').textContent = S.ownedCollectibles.length;
+}
+
+// ══════════════════════════════
+// LEVEL SELECT
+// ══════════════════════════════
+function renderLevels() {
+  const grid = document.getElementById('levelsGrid');
+  grid.innerHTML = '';
+  LEVELS.forEach((lv, i) => {
+    const done = S.completedLevels.includes(i);
+    const locked = i > S.completedLevels.length && !done;
+    const card = document.createElement('div');
+    card.className = 'level-card' + (done?' completed':'') + (locked?' locked':'');
+    card.innerHTML = `
+      <div class="lcard-emoji">${lv.emoji}</div>
+      <div class="lcard-num">LVL ${i+1}</div>
+      <div class="lcard-name">${lv.name}</div>
+      <div class="lcard-coins">+${lv.bonus}🪙 bonus</div>
+      ${done ? '<div class="lcard-done">✅</div>' : ''}
+    `;
+    if (!locked) card.addEventListener('click', () => startLevel(i));
+    grid.appendChild(card);
+  });
+}
+
+// ══════════════════════════════
+// SHOP
+// ══════════════════════════════
+function renderShop() {
+  document.getElementById('shopCoins').textContent = S.coins;
+  const grid = document.getElementById('shopGrid');
+  grid.innerHTML = '';
+  COLLECTIBLES.forEach(c => {
+    const owned = S.ownedCollectibles.includes(c.id);
+    const equipped = S.equippedCollectible === c.id;
+    const card = document.createElement('div');
+    card.className = 'shop-card' + (owned?' owned':'') + (equipped?' equipped':'');
+    card.innerHTML = `
+      ${equipped ? '<div class="shop-equip-badge">ACTIVE</div>' : ''}
+      <div class="shop-icon">${c.icon}</div>
+      <div class="shop-member">${c.member}</div>
+      <div class="shop-name">${c.name}</div>
+      <div class="shop-effect">⚡ ${c.effectName}<br><span style="font-size:10px;color:#776600">${c.effect}</span></div>
+      ${owned
+        ? `<div class="shop-owned">${equipped ? '✓ Equipped — tap to unequip' : '✓ Owned — tap to equip'}</div>`
+        : `<div class="shop-price">${c.cost} 🪙</div>`
+      }
+    `;
+    card.addEventListener('click', () => shopAction(c));
+    grid.appendChild(card);
+  });
+}
+
+function shopAction(c) {
+  if (S.ownedCollectibles.includes(c.id)) {
+    S.equippedCollectible = S.equippedCollectible === c.id ? null : c.id;
+    saveState(); renderShop();
+    showNotif(S.equippedCollectible === c.id ? `${c.icon} ${c.name} equipped!` : `${c.name} unequipped`);
+    return;
+  }
+  if (S.coins >= c.cost) {
+    S.coins -= c.cost;
+    S.ownedCollectibles.push(c.id);
+    S.equippedCollectible = c.id;
+    saveState(); renderShop();
+    document.getElementById('shopCoins').textContent = S.coins;
+    showNotif(`${c.icon} Got ${c.name}! ${c.effect}`, 'gold');
+  } else {
+    showNotif(`Need ${c.cost - S.coins} more 🪙 to buy!`);
+  }
+}
+
+// ══════════════════════════════
+// GAME LOGIC
+// ══════════════════════════════
+const GRID_SIZE = 12;
+let gGrid = [], gFound = [], gWordPos = [];
+let gWordsFoundThis = [], gLevelIdx = 0;
+let gSel = [], gSelStart = null, gDragging = false;
+let gTimerInt = null, gElapsed = 0, gTimerPaused = false;
+let gComplete = false;
+
+function startLevel(idx) {
+  gLevelIdx = idx;
+  gComplete = false;
+  gWordsFoundThis = [];
+  gSel = []; gSelStart = null;
+  buildGrid();
+  renderGameScreen();
+  goTo('screenGame');
+  startTimer();
+}
+
+function buildGrid() {
+  const lv = LEVELS[gLevelIdx];
+  const words = lv.words.map(w => w.replace(/\s/g,'').toUpperCase());
+  gGrid = Array.from({length:GRID_SIZE}, () => Array(GRID_SIZE).fill(''));
+  gFound = Array.from({length:GRID_SIZE}, () => Array(GRID_SIZE).fill(-1));
+  gWordPos = [];
+
+  const dirs = [[0,1],[1,0],[0,-1],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]];
+  for (const word of words) {
+    let placed = false, tries = 0;
+    while (!placed && tries++ < 300) {
+      const dir = dirs[Math.floor(Math.random()*8)];
+      const [dr, dc] = dir;
+      const maxR = GRID_SIZE - dr*(word.length-1);
+      const maxC = GRID_SIZE - dc*(word.length-1);
+      const minR = -dr*(word.length-1);
+      const minC = -dc*(word.length-1);
+      const r0 = Math.floor(Math.random()*(Math.abs(maxR-minR)||1)) + Math.min(maxR,minR);
+      const c0 = Math.floor(Math.random()*(Math.abs(maxC-minC)||1)) + Math.min(maxC,minC);
+      if (r0<0||c0<0||r0>=GRID_SIZE||c0>=GRID_SIZE) continue;
+      let ok = true; const cells = [];
+      for (let i=0; i<word.length; i++) {
+        const r=r0+dr*i, c=c0+dc*i;
+        if (r<0||c<0||r>=GRID_SIZE||c>=GRID_SIZE){ok=false;break;}
+        if (gGrid[r][c]!==''&&gGrid[r][c]!==word[i]){ok=false;break;}
+        cells.push([r,c]);
+      }
+      if (ok) {
+        cells.forEach(([r,c],i) => gGrid[r][c]=word[i]);
+        gWordPos.push({word, cells});
+        placed = true;
+      }
+    }
+  }
+  const abc = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  for (let r=0;r<GRID_SIZE;r++) for (let c=0;c<GRID_SIZE;c++)
+    if (!gGrid[r][c]) gGrid[r][c] = abc[Math.floor(Math.random()*26)];
+}
+
+function renderGameScreen() {
+  const lv = LEVELS[gLevelIdx];
+  document.getElementById('gtLevel').textContent = `LEVEL ${gLevelIdx+1}`;
+  document.getElementById('gtTheme').textContent = lv.name;
+  document.getElementById('gtCoins').textContent = S.coins;
+  renderGridDOM();
+  renderWordChips();
+  updateProgress();
+  renderActiveCollectible();
+}
+
+function renderGridDOM() {
+  const container = document.getElementById('wordGrid');
+  const wrap = container.parentElement;
+  const sz = Math.floor((Math.min(window.innerWidth, 480) - 44) / GRID_SIZE);
+  container.style.gridTemplateColumns = `repeat(${GRID_SIZE},${sz}px)`;
+  container.style.gridTemplateRows = `repeat(${GRID_SIZE},${sz}px)`;
+  container.innerHTML = '';
+
+  for (let r=0;r<GRID_SIZE;r++) for (let c=0;c<GRID_SIZE;c++) {
+    const el = document.createElement('div');
+    el.className = 'cell';
+    el.style.fontSize = Math.max(9, sz-10)+'px';
+    el.textContent = gGrid[r][c];
+    el.dataset.r = r; el.dataset.c = c;
+    if (gFound[r][c]>=0) el.classList.add('found', `fc${gFound[r][c]%8}`);
+    container.appendChild(el);
+  }
+
+  // Touch / mouse events on grid container
+  container.addEventListener('mousedown', onDown);
+  container.addEventListener('mouseover', onOver);
+  container.addEventListener('mouseup', onUp);
+  container.addEventListener('touchstart', e=>{e.preventDefault();onDown(e.touches[0]);},{passive:false});
+  container.addEventListener('touchmove', e=>{e.preventDefault();const t=e.touches[0];const el=document.elementFromPoint(t.clientX,t.clientY);if(el?.dataset?.r)onOver(el);},{passive:false});
+  container.addEventListener('touchend', e=>{e.preventDefault();onUp();},{passive:false});
+}
+
+function cellEl(r,c){return document.querySelector(`#wordGrid .cell[data-r="${r}"][data-c="${c}"]`);}
+
+function onDown(e) {
+  gDragging = true; gSel = [];
+  const el = e.target?.closest?.('.cell')||e.target;
+  if (!el?.dataset?.r) return;
+  gSelStart = [+el.dataset.r, +el.dataset.c];
+  selectCell(+el.dataset.r, +el.dataset.c);
+}
+
+function onOver(e) {
+  if (!gDragging || !gSelStart) return;
+  const el = (e.target?.dataset?.r !== undefined) ? e.target : e;
+  if (!el?.dataset?.r) return;
+  const r=+el.dataset.r, c=+el.dataset.c;
+  const [sr,sc]=gSelStart, dr=r-sr, dc=c-sc;
+  const len = Math.max(Math.abs(dr),Math.abs(dc));
+  if (!len) { clearSel(); selectCell(sr,sc); return; }
+  const dirs=[[0,1],[1,0],[0,-1],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]];
+  let best=null,bs=-1;
+  for (const d of dirs) {
+    const dot=(dr*d[0]+dc*d[1])/(Math.sqrt(dr*dr+dc*dc));
+    if(dot>bs){bs=dot;best=d;}
+  }
+  clearSel(); gSel=[];
+  for (let i=0;i<=len;i++){
+    const nr=sr+best[0]*i,nc=sc+best[1]*i;
+    if(nr>=0&&nc>=0&&nr<GRID_SIZE&&nc<GRID_SIZE) selectCell(nr,nc);
+  }
+}
+
+function onUp() {
+  gDragging = false;
+  if (gSel.length) checkWord();
+  clearSel(); gSel=[]; gSelStart=null;
+}
+
+function selectCell(r,c) {
+  gSel.push([r,c]);
+  const el=cellEl(r,c);
+  if(el&&gFound[r][c]<0) el.classList.add('sel');
+}
+function clearSel(){document.querySelectorAll('#wordGrid .cell.sel').forEach(e=>e.classList.remove('sel'));}
+
+function checkWord() {
+  const fwd = gSel.map(([r,c])=>gGrid[r][c]).join('');
+  const rev = fwd.split('').reverse().join('');
+  for (const wp of gWordPos) {
+    if ((fwd===wp.word||rev===wp.word) && !gWordsFoundThis.includes(wp.word)) {
+      markWordFound(wp);
+      return;
+    }
+  }
+}
+
+function markWordFound(wp) {
+  gWordsFoundThis.push(wp.word);
+  const ci = gWordsFoundThis.length-1;
+  const bonus = S.equippedCollectible==='jhope_sun'?15:0;
+  const coins = 10 + wp.word.length*2 + bonus;
+  const score = 50 + wp.word.length*5;
+
+  gSel.forEach(([r,c])=>{ gFound[r][c]=ci; });
+  renderGridDOM(); // re-render to show found colors
+  renderWordChips();
+  updateProgress();
+
+  const mult = S.equippedCollectible==='jk_bunny'?1.5:1;
+  S.coins += coins; S.score += Math.floor(score*mult);
+  saveState();
+  document.getElementById('gtCoins').textContent = S.coins;
+
+  spawnSparkle(coins);
+  showNotif(`+${coins} 🪙  "${wp.word}" found!`);
+
+  if (gWordsFoundThis.length === gWordPos.length) {
+    setTimeout(()=>levelWin(), 500);
+  }
+}
+
+function levelWin() {
+  gComplete = true; stopTimer();
+  const bonus = LEVELS[gLevelIdx].bonus;
+  S.coins += bonus; S.score += bonus*3;
+  if (!S.completedLevels.includes(gLevelIdx)) S.completedLevels.push(gLevelIdx);
+  saveState();
+
+  document.getElementById('modalEmoji').textContent = LEVELS[gLevelIdx].emoji;
+  document.getElementById('modalTitle').textContent = 'Level Complete! 🎉';
+  const m=Math.floor(gElapsed/60),s=Math.floor(gElapsed%60);
+  document.getElementById('modalBody').innerHTML =
+    `All ${gWordPos.length} words found!<br>Bonus: <strong>+${bonus} 🪙</strong><br>Time: ${m}:${s.toString().padStart(2,'0')}<br><br>Total coins: <strong>${S.coins} 🪙</strong>`;
+  const nextBtn = document.getElementById('modalNext');
+  if (gLevelIdx+1 < LEVELS.length) {
+    nextBtn.textContent='Next Level →';
+    nextBtn.onclick=()=>{closeModal();startLevel(gLevelIdx+1);};
+  } else {
+    nextBtn.textContent='🏆 All Done!';
+    nextBtn.onclick=()=>{closeModal();goTo('screenHome');};
+  }
+  document.getElementById('modal').classList.add('show');
+}
+
+function closeModal(){document.getElementById('modal').classList.remove('show');}
+
+// ——— Word chips ———
+function renderWordChips() {
+  const lv = LEVELS[gLevelIdx];
+  const chips = document.getElementById('wordChips');
+  chips.innerHTML = '';
+  lv.words.forEach(w => {
+    const clean = w.replace(/\s/g,'').toUpperCase();
+    const found = gWordsFoundThis.includes(clean);
+    const coin = 10 + clean.length*2;
+    const chip = document.createElement('div');
+    chip.className = 'word-chip' + (found?' found':'');
+    chip.innerHTML = `${w}<span class="reward">+${coin}🪙</span>`;
+    chips.appendChild(chip);
+  });
+}
+
+function updateProgress() {
+  const pct = gWordPos.length ? (gWordsFoundThis.length/gWordPos.length)*100 : 0;
+  document.getElementById('progressBar').style.width = pct+'%';
+}
+
+// ——— Active collectible display ———
+function renderActiveCollectible() {
+  const bar = document.getElementById('activeColl');
+  if (!S.equippedCollectible) { bar.style.display='none'; return; }
+  const c = COLLECTIBLES.find(x=>x.id===S.equippedCollectible);
+  if (!c) { bar.style.display='none'; return; }
+  bar.style.display='flex';
+  document.getElementById('activeCollText').innerHTML = `${c.icon} <strong>${c.name}</strong> — ${c.effectName}`;
+  // Show "Use" button only for one-time use collectibles
+  const oneTime = ['rm_mic','suga_piano','v_camera','bts_van','jin_rose'];
+  document.getElementById('activeCollBtn').style.display = oneTime.includes(c.id)?'':'none';
+}
+
+function useCollectible() {
+  const id = S.equippedCollectible;
+  if (!id) return;
+
+  if (id==='rm_mic') {
+    // Reveal a random unfound letter position
+    const unfound = gWordPos.filter(wp=>!gWordsFoundThis.includes(wp.word));
+    if (!unfound.length){showNotif('All words found!');return;}
+    const wp = unfound[Math.floor(Math.random()*unfound.length)];
+    const [r,c] = wp.cells[Math.floor(Math.random()*wp.cells.length)];
+    const el = cellEl(r,c);
+    if(el){el.style.background='rgba(255,204,0,0.4)';el.style.borderColor='#ffcc00';}
+    showNotif(`🎤 Revealed a letter in "${wp.word}"!`,'gold');
+  }
+  else if (id==='jin_rose') {
+    gTimerPaused = true;
+    showNotif('🌹 Timer frozen for 20s!','green');
+    setTimeout(()=>{ gTimerPaused=false; showNotif('Timer resumed!'); }, 20000);
+  }
+  else if (id==='suga_piano') {
+    const unfound = gWordPos.filter(wp=>!gWordsFoundThis.includes(wp.word));
+    if (!unfound.length){showNotif('All words found!');return;}
+    const wp = unfound[0];
+    wp.cells.forEach(([r,c])=>{
+      const el=cellEl(r,c);
+      if(el){el.style.background='rgba(153,102,255,0.55)';el.style.borderColor='#aa88ff';}
+    });
+    showNotif(`🎹 "${wp.word}" is glowing!`,'green');
+  }
+  else if (id==='v_camera') {
+    const unfound = gWordPos.filter(wp=>!gWordsFoundThis.includes(wp.word));
+    if (!unfound.length){showNotif('All words found!');return;}
+    gSel = unfound[0].cells;
+    markWordFound(unfound[0]);
+    showNotif('📸 V Camera auto-found a word!','green');
+  }
+  else if (id==='bts_van') {
+    gWordPos.filter(wp=>!gWordsFoundThis.includes(wp.word)).forEach(wp=>{
+      gSel = wp.cells;
+      markWordFound(wp);
+    });
+    showNotif('🚐 BTS Van — Level skipped!','green');
+  }
+}
+
+// ——— Timer ———
+function startTimer() {
+  stopTimer(); gElapsed=0; gTimerPaused=false;
+  document.getElementById('gtTimer').textContent='0:00';
+  gTimerInt = setInterval(()=>{
+    if(gTimerPaused) return;
+    const rate = S.equippedCollectible==='jimin_feather'?0.5:1;
+    gElapsed += rate;
+    const m=Math.floor(gElapsed/60),s=Math.floor(gElapsed%60);
+    document.getElementById('gtTimer').textContent=`${m}:${s.toString().padStart(2,'0')}`;
+  },1000);
+}
+function stopTimer(){clearInterval(gTimerInt);}
+
+// ══════════════════════════════
+// NOTIFICATIONS & FX
+// ══════════════════════════════
+let notifTO;
+function showNotif(msg, type='') {
+  const el=document.getElementById('notif');
+  el.textContent=msg;
+  el.className='notif'+(type?' '+type:'')+' show';
+  clearTimeout(notifTO);
+  notifTO=setTimeout(()=>el.classList.remove('show'),2600);
+}
+
+function spawnSparkle(coins) {
+  const sp=document.createElement('div');
+  sp.className='sparkle';
+  sp.textContent=coins>15?'✨':'⭐';
+  sp.style.left=(25+Math.random()*50)+'%';
+  sp.style.top='30%';
+  document.body.appendChild(sp);
+  setTimeout(()=>sp.remove(),1000);
+}
+
+// ══════════════════════════════
+// RESET
+// ══════════════════════════════
+function resetGame() {
+  if (!confirm('Reset all progress? This cannot be undone!')) return;
+  S = {coins:0,score:0,completedLevels:[],ownedCollectibles:[],equippedCollectible:null};
+  saveState(); refreshHome();
+  showNotif('Progress reset!');
+}
+
+// ══════════════════════════════
+// STARS
+// ══════════════════════════════
+function initStars(){
+  const bg=document.getElementById('bgStars');
+  for(let i=0;i<90;i++){
+    const s=document.createElement('div'); s.className='star';
+    const sz=Math.random()*2.5+0.5;
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${Math.random()*4}s;animation-duration:${2+Math.random()*5}s;opacity:${0.2+Math.random()*0.8}`;
+    bg.appendChild(s);
+  }
+}
+
+// ══════════════════════════════
+// GLOBAL MOUSE UP
+// ══════════════════════════════
+document.addEventListener('mouseup',()=>{ if(gDragging){gDragging=false;onUp();} });
+
+// ══════════════════════════════
+// INIT
+// ══════════════════════════════
+loadState();
+initStars();
+refreshHome();
+</script>
+</body>
+</html>
